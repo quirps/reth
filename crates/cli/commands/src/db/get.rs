@@ -75,6 +75,9 @@ impl Command {
                     StaticFileSegment::Receipts => {
                         (table_key::<tables::Receipts>(&key)?, <ReceiptMask<ReceiptTy<N>>>::MASK)
                     }
+                    StaticFileSegment::AccountChangeSets => {
+                        todo!()
+                    }
                 };
 
                 let content = tool
@@ -113,6 +116,9 @@ impl Command {
                                         content[0].as_slice(),
                                     )?;
                                     println!("{}", serde_json::to_string_pretty(&receipt)?);
+                                }
+                                StaticFileSegment::AccountChangeSets => {
+                                    todo!()
                                 }
                             }
                         }
