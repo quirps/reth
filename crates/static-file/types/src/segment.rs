@@ -4,7 +4,10 @@ use alloc::{
     string::{String, ToString},
 };
 use alloy_primitives::TxNumber;
-use core::{ops::{Range, RangeInclusive}, str::FromStr};
+use core::{
+    ops::{Range, RangeInclusive},
+    str::FromStr,
+};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIs, EnumString};
@@ -138,7 +141,8 @@ impl StaticFileSegment {
 
     /// Returns `true` if a segment row is linked to a block.
     pub const fn is_block_based(&self) -> bool {
-        matches!(self, Self::Headers)
+        // TODO(rjected): figure out if this is correct for account change sets
+        matches!(self, Self::Headers | Self::AccountChangeSets)
     }
 }
 
