@@ -40,7 +40,7 @@ use reth_static_file_types::{
     find_fixed_range, HighestStaticFiles, SegmentHeader, SegmentRangeInclusive, StaticFileSegment,
     DEFAULT_BLOCKS_PER_STATIC_FILE,
 };
-use reth_storage_api::{AccountReader, BlockBodyIndicesProvider, ChangeSetReader, DBProvider};
+use reth_storage_api::{BlockBodyIndicesProvider, ChangeSetReader, DBProvider};
 use reth_storage_errors::provider::{ProviderError, ProviderResult};
 use std::{
     collections::{BTreeMap, HashMap},
@@ -636,7 +636,7 @@ impl<N: NodePrimitives> StaticFileProvider<N> {
             NippyJar::<SegmentHeader>::load(&file).map_err(ProviderError::other)?
         };
 
-        let header = *jar.user_header();
+        let header = jar.user_header().clone();
         jar.delete().map_err(ProviderError::other)?;
 
         // SAFETY: this is currently necessary to ensure that certain indexes like
@@ -1577,7 +1577,7 @@ impl<N: NodePrimitives> ChangeSetReader for StaticFileProvider<N> {
         &self,
         block_number: BlockNumber,
     ) -> ProviderResult<Vec<reth_db::models::AccountBeforeTx>> {
-        let provider = match self.get_segment_provider_from_block(
+        let provider = match self.get_segment_provider_for_block(
             StaticFileSegment::AccountChangeSets,
             block_number,
             None,
@@ -1609,7 +1609,7 @@ impl<N: NodePrimitives> ChangeSetReader for StaticFileProvider<N> {
         block_number: BlockNumber,
         address: Address,
     ) -> ProviderResult<Option<reth_db::models::AccountBeforeTx>> {
-        let provider = match self.get_segment_provider_from_block(
+        let provider = match self.get_segment_provider_for_block(
             StaticFileSegment::AccountChangeSets,
             block_number,
             None,
