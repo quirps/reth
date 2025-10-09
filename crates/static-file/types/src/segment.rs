@@ -10,8 +10,8 @@ use core::{
     str::FromStr,
 };
 use derive_more::Display;
-use serde::{Deserialize, Serialize};
-use strum::{EnumIs, EnumString};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use strum::{EnumString, EnumIs};
 
 #[derive(
     Debug,
@@ -22,11 +22,11 @@ use strum::{EnumIs, EnumString};
     Hash,
     Ord,
     PartialOrd,
-    Deserialize,
-    Serialize,
     EnumString,
     Display,
     EnumIs,
+    Serialize,
+    Deserialize,
 )]
 #[strum(serialize_all = "kebab-case")]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
@@ -176,7 +176,7 @@ impl ChangesetOffset {
 }
 
 /// A segment header that contains information common to all segments. Used for storage.
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Clone)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct SegmentHeader {
     /// Defines the expected block range for a static file segment. This attribute is crucial for
     /// scenarios where the file contains no data, allowing for a representation beyond a
@@ -190,9 +190,46 @@ pub struct SegmentHeader {
     /// Segment type
     segment: StaticFileSegment,
     /// List of offsets, for where each block's changeset starts.
-    ///
-    /// This is used to determine where in the file to index, and can also be used to
     changeset_offsets: Option<Vec<ChangesetOffset>>,
+}
+
+impl Serialize for SegmentHeader {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // For backward compatibility, only serialize 4 fields (without changeset_offsets)
+        // This matches what we deserialize from old files
+        (&self.expected_block_range, &self.block_range, &self.tx_range, &self.segment)
+            .serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for SegmentHeader {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // Old format without changeset_offsets (for backward compatibility)
+        #[derive(Deserialize)]
+        struct OldHeader {
+            expected_block_range: SegmentRangeInclusive,
+            block_range: Option<SegmentRangeInclusive>,
+            tx_range: Option<SegmentRangeInclusive>,
+            segment: StaticFileSegment,
+        }
+
+        // For existing files created before changeset_offsets was added
+        let header = OldHeader::deserialize(deserializer)?;
+
+        Ok(Self {
+            expected_block_range: header.expected_block_range,
+            block_range: header.block_range,
+            tx_range: header.tx_range,
+            segment: header.segment,
+            changeset_offsets: None,
+        })
+    }
 }
 
 impl SegmentHeader {
@@ -320,8 +357,8 @@ impl SegmentHeader {
             if let Some(last_offset) = offsets.last_mut() {
                 last_offset.num_changes += 1;
             } else {
-                // If offsets is empty (either from `None` or `Some([])`), we are adding the
-                // first change for a block. The offset for the first block is 0.
+                // If offsets is empty, we are adding the first change for a block
+                // The offset for the first block is 0
                 offsets.push(ChangesetOffset { offset: 0, num_changes: 1 });
             }
         }

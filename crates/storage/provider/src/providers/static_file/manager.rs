@@ -983,6 +983,12 @@ impl<N: NodePrimitives> StaticFileProvider<N> {
                         continue;
                     }
                 }
+                StaticFileSegment::AccountChangeSets => {
+                    // Skip AccountChangeSets if no static files exist for it yet (backward compatibility)
+                    if self.get_highest_static_file_block(segment).is_none() {
+                        continue
+                    }
+                }
             }
 
             let initial_highest_block = self.get_highest_static_file_block(segment);
