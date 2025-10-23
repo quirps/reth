@@ -61,11 +61,12 @@ mod tests {
         test_utils::create_test_provider_factory, HeaderProvider, StaticFileProviderFactory,
     };
     use alloy_consensus::{Header, SignableTransaction, Transaction, TxLegacy};
-    use alloy_primitives::{map::HashMap, BlockHash, Signature, TxNumber, B256};
+    use alloy_primitives::{map::HashMap, BlockHash, Signature, TxNumber, B256, U256};
     use rand::seq::SliceRandom;
-    use reth_db::test_utils::create_test_static_files_dir;
+    use reth_db::{models::AccountBeforeTx, test_utils::create_test_static_files_dir};
     use reth_db_api::{transaction::DbTxMut, CanonicalHeaders, HeaderNumbers, Headers};
     use reth_ethereum_primitives::{EthPrimitives, Receipt, TransactionSigned};
+    use reth_primitives_traits::Account;
     use reth_static_file_types::{
         find_fixed_range, SegmentRangeInclusive, DEFAULT_BLOCKS_PER_STATIC_FILE,
     };
@@ -160,8 +161,7 @@ mod tests {
 
         // [ Headers Creation and Commit ]
         {
-            let sf_rw = StaticFileProviderBuilder::<EthPrimitives>::read_write(&static_dir)
-                .expect("Failed to create static file provider builder")
+            let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
                 .with_blocks_per_file(blocks_per_file)
                 .build()
                 .expect("Failed to build static file provider");
@@ -257,7 +257,6 @@ mod tests {
         // Test cases execution
         {
             let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
-                .expect("Failed to create static file provider builder")
                 .with_blocks_per_file(blocks_per_file)
                 .build()
                 .expect("Failed to build static file provider");
@@ -474,7 +473,6 @@ mod tests {
             let (static_dir, _) = create_test_static_files_dir();
 
             let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
-                .expect("Failed to create static file provider builder")
                 .with_blocks_per_file(blocks_per_file)
                 .build()
                 .expect("Failed to build static file provider");
@@ -482,7 +480,6 @@ mod tests {
             setup_tx_based_scenario(&sf_rw, segment, blocks_per_file);
 
             let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
-                .expect("Failed to create static file provider builder")
                 .with_blocks_per_file(blocks_per_file)
                 .build()
                 .expect("Failed to build static file provider");
@@ -564,7 +561,7 @@ mod tests {
         let (static_dir, _) = create_test_static_files_dir();
 
         {
-            let sf_rw = StaticFileProviderBuilder::<EthPrimitives>::read_write(&static_dir)?
+            let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
                 .with_blocks_per_file(10)
                 .build()?;
             let mut header_writer = sf_rw.latest_writer(StaticFileSegment::Headers)?;
@@ -590,7 +587,7 @@ mod tests {
         }
 
         {
-            let sf_rw = StaticFileProviderBuilder::<EthPrimitives>::read_write(&static_dir)?
+            let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
                 .with_blocks_per_file(5)
                 .build()?;
             let mut header_writer = sf_rw.latest_writer(StaticFileSegment::Headers)?;
@@ -617,7 +614,7 @@ mod tests {
         }
 
         {
-            let sf_rw = StaticFileProviderBuilder::<EthPrimitives>::read_write(&static_dir)?
+            let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
                 .with_blocks_per_file(15)
                 .build()?;
             let mut header_writer = sf_rw.latest_writer(StaticFileSegment::Headers)?;
@@ -650,13 +647,9 @@ mod tests {
 
     #[test]
     fn test_account_changeset_static_files() {
-        use alloy_primitives::Address;
-        use reth_db::models::AccountBeforeTx;
-        use reth_primitives_traits::Account;
-
         let (static_dir, _) = create_test_static_files_dir();
 
-        let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir)
+        let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir, true)
             .expect("Failed to create static file provider");
 
         // Helper function to generate test changesets
@@ -726,13 +719,9 @@ mod tests {
 
     #[test]
     fn test_get_account_before_block() {
-        use alloy_primitives::Address;
-        use reth_db::models::AccountBeforeTx;
-        use reth_primitives_traits::Account;
-
         let (static_dir, _) = create_test_static_files_dir();
 
-        let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir)
+        let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir, true)
             .expect("Failed to create static file provider");
 
         // Setup test data
@@ -819,10 +808,6 @@ mod tests {
 
     #[test]
     fn test_account_changeset_truncation() {
-        use alloy_primitives::Address;
-        use reth_db::models::AccountBeforeTx;
-        use reth_primitives_traits::Account;
-
         let (static_dir, _) = create_test_static_files_dir();
 
         let blocks_per_file = 10;
@@ -833,7 +818,7 @@ mod tests {
 
         // Setup: Create account changesets for multiple blocks
         {
-            let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir)
+            let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir, false)
                 .expect("Failed to create static file provider")
                 .with_blocks_per_file(blocks_per_file);
 
@@ -903,7 +888,7 @@ mod tests {
         }
 
         // Test truncation scenarios
-        let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir)
+        let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir, true)
             .expect("Failed to create static file provider")
             .with_blocks_per_file(blocks_per_file);
 
@@ -944,13 +929,9 @@ mod tests {
 
     #[test]
     fn test_changeset_binary_search() {
-        use alloy_primitives::Address;
-        use reth_db::models::AccountBeforeTx;
-        use reth_primitives_traits::Account;
-
         let (static_dir, _) = create_test_static_files_dir();
 
-        let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir)
+        let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir, true)
             .expect("Failed to create static file provider");
 
         // Create a block with many account changes to test binary search

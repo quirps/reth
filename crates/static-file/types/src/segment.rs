@@ -11,7 +11,7 @@ use core::{
 };
 use derive_more::Display;
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize};
-use strum::{EnumString, EnumIs};
+use strum::{EnumIs, EnumString};
 
 #[derive(
     Debug,

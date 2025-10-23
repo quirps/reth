@@ -466,8 +466,9 @@ where
         Evm: ConfigureEvm<Primitives = N::Primitives> + 'static,
     {
         let static_file_provider =
-            StaticFileProviderBuilder::read_write(self.data_dir().static_files())?
+            StaticFileProviderBuilder::read_write(self.data_dir().static_files())
                 .with_metrics()
+                .with_static_files_v2()
                 .build()?;
 
         let factory =
