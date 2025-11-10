@@ -703,6 +703,7 @@ mod tests {
                 StaticFileSegment::Headers => "headers",
                 StaticFileSegment::Transactions => "transactions",
                 StaticFileSegment::Receipts => "receipts",
+                StaticFileSegment::AccountChangeSets => "accountchangesets",
             };
             assert_eq!(static_str, expected_str);
         }
@@ -719,6 +720,7 @@ mod tests {
                 StaticFileSegment::Headers => "Headers",
                 StaticFileSegment::Transactions => "Transactions",
                 StaticFileSegment::Receipts => "Receipts",
+                StaticFileSegment::AccountChangeSets => "AccountChangeSets",
             };
             assert_eq!(ser, format!("\"{expected_str}\""));
         }

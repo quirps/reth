@@ -61,7 +61,7 @@ mod tests {
         test_utils::create_test_provider_factory, HeaderProvider, StaticFileProviderFactory,
     };
     use alloy_consensus::{Header, SignableTransaction, Transaction, TxLegacy};
-    use alloy_primitives::{map::HashMap, BlockHash, Signature, TxNumber, B256, U256};
+    use alloy_primitives::{map::HashMap, Address, BlockHash, Signature, TxNumber, B256, U256};
     use rand::seq::SliceRandom;
     use reth_db::{models::AccountBeforeTx, test_utils::create_test_static_files_dir};
     use reth_db_api::{transaction::DbTxMut, CanonicalHeaders, HeaderNumbers, Headers};
@@ -161,10 +161,11 @@ mod tests {
 
         // [ Headers Creation and Commit ]
         {
-            let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
-                .with_blocks_per_file(blocks_per_file)
-                .build()
-                .expect("Failed to build static file provider");
+            let sf_rw: StaticFileProvider<EthPrimitives> =
+                StaticFileProviderBuilder::read_write(&static_dir)
+                    .with_blocks_per_file(blocks_per_file)
+                    .build()
+                    .expect("Failed to build static file provider");
 
             let mut header_writer = sf_rw.latest_writer(StaticFileSegment::Headers).unwrap();
 
@@ -561,9 +562,10 @@ mod tests {
         let (static_dir, _) = create_test_static_files_dir();
 
         {
-            let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
-                .with_blocks_per_file(10)
-                .build()?;
+            let sf_rw: StaticFileProvider<EthPrimitives> =
+                StaticFileProviderBuilder::read_write(&static_dir)
+                    .with_blocks_per_file(10)
+                    .build()?;
             let mut header_writer = sf_rw.latest_writer(StaticFileSegment::Headers)?;
 
             let mut header = Header::default();
@@ -587,9 +589,10 @@ mod tests {
         }
 
         {
-            let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
-                .with_blocks_per_file(5)
-                .build()?;
+            let sf_rw: StaticFileProvider<EthPrimitives> =
+                StaticFileProviderBuilder::read_write(&static_dir)
+                    .with_blocks_per_file(5)
+                    .build()?;
             let mut header_writer = sf_rw.latest_writer(StaticFileSegment::Headers)?;
 
             let mut header = Header::default();
@@ -614,9 +617,10 @@ mod tests {
         }
 
         {
-            let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
-                .with_blocks_per_file(15)
-                .build()?;
+            let sf_rw: StaticFileProvider<EthPrimitives> =
+                StaticFileProviderBuilder::read_write(&static_dir)
+                    .with_blocks_per_file(15)
+                    .build()?;
             let mut header_writer = sf_rw.latest_writer(StaticFileSegment::Headers)?;
 
             let mut header = Header::default();
@@ -818,9 +822,12 @@ mod tests {
 
         // Setup: Create account changesets for multiple blocks
         {
-            let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir, true)
-                .expect("Failed to create static file provider")
-                .with_blocks_per_file(blocks_per_file);
+            let sf_rw: StaticFileProvider<EthPrimitives> =
+                StaticFileProviderBuilder::read_write(&static_dir)
+                    .with_blocks_per_file(blocks_per_file)
+                    .with_static_files_v2()
+                    .build()
+                    .expect("failed to create static file provider");
 
             let mut writer = sf_rw.latest_writer(StaticFileSegment::AccountChangeSets).unwrap();
 
@@ -888,9 +895,11 @@ mod tests {
         }
 
         // Test truncation scenarios
-        let sf_rw = StaticFileProvider::<EthPrimitives>::read_write(&static_dir, true)
-            .expect("Failed to create static file provider")
-            .with_blocks_per_file(blocks_per_file);
+        let sf_rw = StaticFileProviderBuilder::read_write(&static_dir)
+            .with_blocks_per_file(blocks_per_file)
+            .with_static_files_v2()
+            .build()
+            .expect("failed to create static file provider");
 
         // Re-initialize the index to ensure it knows about the written files
         sf_rw.initialize_index().expect("Failed to initialize index");

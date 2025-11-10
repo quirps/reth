@@ -148,13 +148,13 @@ impl<P: AsRef<Path>> StaticFileProviderBuilder<P> {
     }
 
     /// Enables metrics on the [`StaticFileProvider`].
-    pub fn with_metrics(mut self) -> Self {
+    pub const fn with_metrics(mut self) -> Self {
         self.use_metrics = true;
         self
     }
 
     /// Enables v2 static files
-    pub fn with_static_files_v2(mut self) -> Self {
+    pub const fn with_static_files_v2(mut self) -> Self {
         self.enable_v2_static_files = true;
         self
     }
@@ -409,7 +409,6 @@ impl<N: NodePrimitives> StaticFileProviderInner<N> {
             metrics: None,
             access,
             blocks_per_file,
-            read_only_segments: HashSet::from_iter([StaticFileSegment::AccountChangeSets]),
             read_only_segments,
             _lock_file,
         };
@@ -2270,14 +2269,13 @@ mod tests {
     use reth_db::test_utils::create_test_static_files_dir;
     use reth_static_file_types::{SegmentRangeInclusive, StaticFileSegment};
 
-    use crate::StaticFileProviderBuilder;
+    use crate::{providers::StaticFileProvider, StaticFileProviderBuilder};
 
     #[test]
     fn test_find_fixed_range_with_block_index() -> eyre::Result<()> {
         let (static_dir, _) = create_test_static_files_dir();
-        let sf_rw = StaticFileProviderBuilder::<EthPrimitives>::read_write(&static_dir)?
-            .with_blocks_per_file(100)
-            .build()?;
+        let sf_rw: StaticFileProvider<EthPrimitives> =
+            StaticFileProviderBuilder::read_write(&static_dir).with_blocks_per_file(100).build()?;
 
         let segment = StaticFileSegment::Headers;
 
