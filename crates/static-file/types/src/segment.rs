@@ -69,7 +69,7 @@ impl StaticFileSegment {
             Self::Headers => "headers",
             Self::Transactions => "transactions",
             Self::Receipts => "receipts",
-            Self::AccountChangeSets => "account_change_sets",
+            Self::AccountChangeSets => "accountchangesets",
         }
     }
 
