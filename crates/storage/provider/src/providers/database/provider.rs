@@ -1806,8 +1806,7 @@ impl<TX: DbTxMut + DbTx + 'static, N: NodeTypesForProvider> StateWriter
                     .collect();
 
                 // Increment block and append changesets
-                writer.increment_block(block_number)?;
-                writer.append_account_changeset(changesets)?;
+                writer.append_account_changeset(changesets, block_number)?;
             }
 
             // Commit the static file changes

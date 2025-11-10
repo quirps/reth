@@ -696,8 +696,7 @@ mod tests {
                 let changeset = generate_test_changesets(block_num, addresses.clone());
 
                 // Increment block and write changeset
-                writer.increment_block(block_num).unwrap();
-                writer.append_account_changeset(changeset).unwrap();
+                writer.append_account_changeset(changeset, block_num).unwrap();
             }
 
             writer.commit().unwrap();
@@ -738,37 +737,43 @@ mod tests {
             let mut writer = sf_rw.latest_writer(StaticFileSegment::AccountChangeSets).unwrap();
 
             // Block 0: test_address and other_address change
-            writer.increment_block(0).unwrap();
             writer
-                .append_account_changeset(vec![
-                    AccountBeforeTx {
-                        address: test_address,
-                        info: None, // Account created
-                    },
-                    AccountBeforeTx { address: other_address, info: None },
-                ])
+                .append_account_changeset(
+                    vec![
+                        AccountBeforeTx {
+                            address: test_address,
+                            info: None, // Account created
+                        },
+                        AccountBeforeTx { address: other_address, info: None },
+                    ],
+                    0,
+                )
                 .unwrap();
 
             // Block 1: only other_address changes
-            writer.increment_block(1).unwrap();
             writer
-                .append_account_changeset(vec![AccountBeforeTx {
-                    address: other_address,
-                    info: Some(Account { nonce: 0, balance: U256::ZERO, bytecode_hash: None }),
-                }])
+                .append_account_changeset(
+                    vec![AccountBeforeTx {
+                        address: other_address,
+                        info: Some(Account { nonce: 0, balance: U256::ZERO, bytecode_hash: None }),
+                    }],
+                    1,
+                )
                 .unwrap();
 
             // Block 2: test_address changes again
-            writer.increment_block(2).unwrap();
             writer
-                .append_account_changeset(vec![AccountBeforeTx {
-                    address: test_address,
-                    info: Some(Account {
-                        nonce: 1,
-                        balance: U256::from(1000),
-                        bytecode_hash: None,
-                    }),
-                }])
+                .append_account_changeset(
+                    vec![AccountBeforeTx {
+                        address: test_address,
+                        info: Some(Account {
+                            nonce: 1,
+                            balance: U256::from(1000),
+                            bytecode_hash: None,
+                        }),
+                    }],
+                    2,
+                )
                 .unwrap();
 
             writer.commit().unwrap();
@@ -832,8 +837,6 @@ mod tests {
             let mut writer = sf_rw.latest_writer(StaticFileSegment::AccountChangeSets).unwrap();
 
             for block_num in 0..=tip {
-                writer.increment_block(block_num).unwrap();
-
                 // Create varying number of changes per block
                 let num_changes = ((block_num % 5) + 1) as usize;
                 let mut changeset = Vec::with_capacity(num_changes);
@@ -853,7 +856,7 @@ mod tests {
                     });
                 }
 
-                writer.append_account_changeset(changeset).unwrap();
+                writer.append_account_changeset(changeset, block_num).unwrap();
             }
 
             writer.commit().unwrap();
@@ -958,7 +961,6 @@ mod tests {
         // Write the changeset
         {
             let mut writer = sf_rw.latest_writer(StaticFileSegment::AccountChangeSets).unwrap();
-            writer.increment_block(block_num).unwrap();
 
             let changeset: Vec<AccountBeforeTx> = addresses
                 .iter()
@@ -972,7 +974,7 @@ mod tests {
                 })
                 .collect();
 
-            writer.append_account_changeset(changeset).unwrap();
+            writer.append_account_changeset(changeset, block_num).unwrap();
             writer.commit().unwrap();
         }
 

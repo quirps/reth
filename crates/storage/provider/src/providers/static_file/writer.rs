@@ -813,15 +813,18 @@ impl<N: NodePrimitives> StaticFileProviderRW<N> {
 
     /// Appends a block changeset to the static file.
     ///
-    /// It **DOES NOT** call `increment_block()`.
+    /// It **CALLS** `increment_block()`.
     ///
     /// Returns the current number of changesets in the file, if any.
     pub fn append_account_changeset(
         &mut self,
         mut changeset: Vec<AccountBeforeTx>,
+        block_number: u64,
     ) -> ProviderResult<Option<u64>> {
         debug_assert!(self.writer.user_header().segment() == StaticFileSegment::AccountChangeSets);
         let start = Instant::now();
+
+        self.increment_block(block_number)?;
         self.ensure_no_queued_prune()?;
 
         // first sort the changeset by address
