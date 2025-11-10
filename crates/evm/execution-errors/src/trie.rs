@@ -20,6 +20,18 @@ pub enum StateRootError {
     PrefixSetLoadError(#[from] ProviderError),
 }
 
+impl From<StateRootError> for ProviderError {
+    fn from(value: StateRootError) -> Self {
+        match value {
+            StateRootError::Database(err) |
+            StateRootError::StorageRootError(StorageRootError::Database(err)) => {
+                Self::Database(err)
+            }
+            StateRootError::PrefixSetLoadError(err) => err,
+        }
+    }
+}
+
 /// Storage root error.
 #[derive(Error, PartialEq, Eq, Clone, Debug)]
 pub enum StorageRootError {

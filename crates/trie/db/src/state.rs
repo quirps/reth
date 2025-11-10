@@ -1,6 +1,5 @@
 use crate::{
     load_prefix_sets_with_provider, DatabaseHashedCursorFactory, DatabaseTrieCursorFactory,
-    PrefixSetLoader,
 };
 use alloy_primitives::{
     map::{AddressMap, B256Map},
