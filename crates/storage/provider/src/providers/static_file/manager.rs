@@ -550,13 +550,7 @@ impl<N: NodePrimitives> StaticFileProvider<N> {
     ) -> ProviderResult<StaticFileJarProvider<'_, N>> {
         self.get_segment_provider_for_range(
             segment,
-            || {
-                let ranges = self.get_segment_ranges_from_block(segment, block);
-                if block > 999935 {
-                    tracing::debug!(target: "sync::stages::merkle_changesets", ?block, ?ranges, "Got segment ranges for block");
-                }
-                ranges
-            },
+            || self.get_segment_ranges_from_block(segment, block),
             path,
         )?
         .ok_or(ProviderError::MissingStaticFileBlock(segment, block))
@@ -1609,14 +1603,12 @@ impl<N: NodePrimitives> StaticFileProvider<N> {
         let highest_static_block =
             self.get_highest_static_file_block(StaticFileSegment::AccountChangeSets);
 
-        tracing::debug!(target: "sync::stages::merkle_changesets", ?highest_static_block, ?block_range, "Fetching accounts from changesets");
         if let Some(highest) = highest_static_block {
             let static_end = block_range.end.min(highest + 1);
             if block_range.start < static_end {
                 for block in block_range.start..static_end {
                     let block_changesets = self.account_block_changeset(block)?;
                     for changeset in block_changesets {
-                        tracing::debug!(target: "sync::stages::merkle_changesets", ?block, ?changeset, "Fetched changeset");
                         changesets.push((block, changeset));
                     }
                 }
@@ -1717,15 +1709,9 @@ impl<N: NodePrimitives> ChangeSetReader for StaticFileProvider<N> {
 
             for i in offset.changeset_range() {
 
-                if block_number == 999936 {
-                    tracing::debug!(target: "sync::stages::merkle_changesets", ?i, "Fetching account changeset");
-                }
                 if let Some(change) =
                     cursor.get_one::<reth_db::static_file::AccountChangesetMask>(i.into())?
                 {
-                    if block_number == 999936 {
-                        tracing::debug!(target: "sync::stages::merkle_changesets", ?i, ?change, "Got account changeset");
-                    }
                     changeset.push(change)
                 }
             }

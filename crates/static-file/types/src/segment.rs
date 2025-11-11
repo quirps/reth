@@ -357,9 +357,6 @@ impl SegmentHeader {
         // For changeset segments, initialize an offset entry for the new block
         if self.segment.is_account_changesets() {
             let offsets = self.changeset_offsets.get_or_insert_with(Default::default);
-            if block_num > 999935 {
-                tracing::debug!(target: "sync::stages::merkle_changesets", last_offset = ?offsets.last(), ?block_num, "Writing offset for account entry");
-            }
             // Calculate the offset for the new block
             let new_offset = if let Some(last_offset) = offsets.last() {
                 // The new block starts after the last block's changes
@@ -489,6 +486,12 @@ impl SegmentHeader {
 
     /// Returns the row offset which depends on whether the segment is block or transaction based.
     pub fn start(&self) -> Option<u64> {
+        // TODO: this should be solved instead by making account changesets not technically block
+        // based. block / tx / change-based should be exhaustive always
+        if self.segment.is_account_changesets() {
+            return Some(0)
+        }
+
         if self.segment.is_block_based() {
             return self.block_start()
         }

@@ -201,12 +201,6 @@ impl MerkleChangeSets {
             )?);
         }
 
-        debug!(
-            target: "sync::stages::merkle_changesets",
-            ?per_block_state_reverts,
-            "Computed per-block state reverts",
-        );
-
         // Helper to retrieve state revert data for a specific block from the pre-computed array
         let get_block_state_revert = |block_number: BlockNumber| -> &HashedPostState {
             let index = (block_number - target_start) as usize;
