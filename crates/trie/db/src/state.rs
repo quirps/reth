@@ -267,9 +267,12 @@ impl<TX: DbTx> DatabaseHashedPostState<TX> for HashedPostState {
             Bound::Unbounded => provider.best_block_number()? + 1,
         };
 
+        tracing::debug!(target: "sync::stages::merkle_changesets", ?start, ?end, "Getting account changesets");
+
         // Iterate over account changesets and record value before first occurring account change.
         let mut accounts = HashMap::new();
         for entry in provider.account_changesets_range(*start..end)? {
+            tracing::debug!(target: "sync::stages::merkle_changesets", ?entry, "Got account changeset entry");
             let (_, AccountBeforeTx { address, info }) = entry;
             accounts.entry(address).or_insert(info);
         }

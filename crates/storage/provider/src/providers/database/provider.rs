@@ -1785,7 +1785,7 @@ impl<TX: DbTxMut + DbTx + 'static, N: NodeTypesForProvider> StateWriter
         }
 
         // Write account changes to static files
-        tracing::trace!("Writing account changes to static files");
+        tracing::debug!(target: "sync::stages::merkle_changesets", ?first_block, "Writing account changes to static files");
 
         // Try to get a writer for AccountChangeSets static file
         if let Ok(mut writer) =

@@ -86,10 +86,10 @@ impl Command {
                         <ReceiptMask<ReceiptTy<N>>>::MASK,
                     ),
                     StaticFileSegment::AccountChangeSets => {
-                        let subkey = table_subkey::<tables::AccountChangeSets>(subkey.as_deref())?;
+                        let subkey = table_subkey::<tables::AccountChangeSets>(subkey.as_deref()).ok();
                         (
                             table_key::<tables::AccountChangeSets>(&key)?,
-                            Some(subkey),
+                            subkey,
                             AccountChangesetMask::MASK,
                         )
                     }
@@ -98,7 +98,10 @@ impl Command {
                 // handle account changesets differently if a subkey is provided.
                 if let StaticFileSegment::AccountChangeSets = segment {
                     let Some(subkey) = subkey else {
-                        error!(target: "reth::cli", "Subkey is required for `db get` account changesets");
+                        // get all changesets for the block
+                        let changesets = tool.provider_factory.static_file_provider().account_block_changeset(key)?;
+
+                        println!("{}", serde_json::to_string_pretty(&changesets)?);
                         return Ok(())
                     };
 

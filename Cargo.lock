@@ -7763,6 +7763,7 @@ dependencies = [
  "sysinfo",
  "tempfile",
  "thiserror 2.0.17",
+ "tracing",
 ]
 
 [[package]]
@@ -10571,6 +10572,7 @@ dependencies = [
  "serde",
  "serde_json",
  "strum 0.27.2",
+ "tracing",
 ]
 
 [[package]]

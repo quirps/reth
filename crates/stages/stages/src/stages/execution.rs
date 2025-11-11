@@ -500,6 +500,8 @@ where
 
         self.ensure_consistency(provider, input.checkpoint.block_number, Some(unwind_to))?;
 
+        panic!("STOP");
+
         // Unwind account and storage changesets, as well as receipts.
         //
         // This also updates `PlainStorageState` and `PlainAccountState`.

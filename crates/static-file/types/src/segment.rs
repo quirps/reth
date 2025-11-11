@@ -357,6 +357,9 @@ impl SegmentHeader {
         // For changeset segments, initialize an offset entry for the new block
         if self.segment.is_account_changesets() {
             let offsets = self.changeset_offsets.get_or_insert_with(Default::default);
+            if block_num > 999935 {
+                tracing::debug!(target: "sync::stages::merkle_changesets", last_offset = ?offsets.last(), ?block_num, "Writing offset for account entry");
+            }
             // Calculate the offset for the new block
             let new_offset = if let Some(last_offset) = offsets.last() {
                 // The new block starts after the last block's changes
@@ -365,6 +368,7 @@ impl SegmentHeader {
                 // First block starts at offset 0
                 0
             };
+
             // Add a new offset entry with 0 changes initially
             offsets.push(ChangesetOffset { offset: new_offset, num_changes: 0 });
         }

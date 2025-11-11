@@ -833,6 +833,9 @@ impl<N: NodePrimitives> StaticFileProviderRW<N> {
         let mut count: u64 = 0;
 
         for change in changeset {
+            if block_number > 999935 {
+                tracing::debug!(target: "sync::stages::merkle_changesets", ?change, ?block_number, "Writing account to changesets");
+            }
             self.append_change(&change)?;
             count += 1;
         }

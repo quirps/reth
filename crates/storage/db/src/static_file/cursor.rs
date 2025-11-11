@@ -40,6 +40,7 @@ impl<'a> StaticFileCursor<'a> {
             KeyOrNumber::Key(_) => unimplemented!(),
             KeyOrNumber::Number(n) => match self.jar().user_header().start() {
                 Some(offset) => {
+                    tracing::debug!(target: "sync::stages::merkle_changesets", ?offset, ?n, "Got offset and start from user header");
                     if offset > n {
                         return Ok(None)
                     }
